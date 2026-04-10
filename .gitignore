@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database
+app/data/*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Thesis data & outputs (not part of the web app)
+v1_outputs/
+v2_outputs/
+v3_outputs/
+EDA/
+metrics/
+gold_template.jsonl
+*.csv
+
+# Thesis scratch files
+test_api.py
+io_utils copy.py
+ztest.py
+readme.txt
+
+# Gemini
+.gemini/
