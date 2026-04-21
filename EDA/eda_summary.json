@@ -1,0 +1,9 @@
+{
+  "n_rows": 476,
+  "n_columns": 35,
+  "valid_count": 423,
+  "valid_rate": 88.8655462184874,
+  "missing_text_reports": 0,
+  "median_word_count": 30.0,
+  "median_code_switch_ratio": 0.43148148148148145
+}
