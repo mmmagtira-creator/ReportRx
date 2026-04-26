@@ -44,6 +44,45 @@
         </div>
     </div>
 
+    <!-- ══ CSV Import Modal ══ -->
+    <div id="import-overlay" class="modal-overlay" style="display:none;">
+        <div class="modal-box import-box">
+            <div class="modal-icon">📄</div>
+            <h2 class="modal-title">Import CSV Reports</h2>
+            <p class="modal-message import-message">
+                Upload a CSV file that contains a column named <strong>reports</strong>.
+                Files without this exact column name will be rejected.
+            </p>
+            <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Upload CSV file">
+                <p class="drop-zone-title">Drag and drop a CSV file here</p>
+                <p class="drop-zone-subtitle">or click to select a file</p>
+            </div>
+            <input id="csv-file-input" type="file" accept=".csv,text/csv" hidden>
+            <p id="import-feedback" class="import-feedback" aria-live="polite"></p>
+            <div class="modal-actions">
+                <button id="import-exit-btn" class="modal-btn modal-btn-secondary" type="button">
+                    Exit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Import Complete Modal ══ -->
+    <div id="complete-overlay" class="modal-overlay" style="display:none;">
+        <div class="modal-box complete-box">
+            <div class="modal-icon">✅</div>
+            <h2 class="modal-title">Analysis Complete</h2>
+            <p id="complete-message" class="modal-message">
+                Analysis complete. Reload the site to see the data.
+            </p>
+            <div class="modal-actions">
+                <button id="reload-btn" class="modal-btn modal-btn-primary" type="button">
+                    Reload
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Header band -->
     <header id="app-header">
         <h1 id="app-title">ReportRx</h1>
@@ -51,56 +90,152 @@
 
     <!-- Main content area -->
     <main id="app-main">
+        <nav id="tab-nav" aria-label="Prototype sections">
+            <button id="report-tab-btn" class="tab-btn active" type="button">Report</button>
+            <button id="analytics-tab-btn" class="tab-btn" type="button">Analytics</button>
+        </nav>
 
-        <!-- Input section -->
-        <section id="input-section">
-            <textarea
-                id="report-input"
-                placeholder="Type ADR Report Here..."
-                rows="6"
-            ></textarea>
+        <section id="report-view" class="tab-view active">
+            <!-- Input section -->
+            <section id="input-section">
+                <textarea
+                    id="report-input"
+                    placeholder="Enter your ADR report: include the medicine, reaction, and onset if known...
 
-            <div id="button-row">
-                <button id="analyze-btn" type="button">Analyze Report</button>
-            </div>
+Example: Uminom ako ng amoxicillin, then after 2 hours nagka-rash at nahilo ako."
+                    rows="6"
+                ></textarea>
+
+                <div id="import-progress" class="progress-panel" style="display:none;">
+                    <p id="progress-label" class="progress-label">Analyzing imported reports...</p>
+                    <div class="progress-track" aria-hidden="true">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <p id="progress-meta" class="progress-meta">0 of 0 reports processed</p>
+                </div>
+
+                <div id="button-row">
+                    <button id="analyze-btn" type="button">Analyze Report</button>
+                    <button id="import-btn" type="button">Import CSV</button>
+                </div>
+            </section>
+
+            <!-- Results section -->
+            <section id="results-section">
+                <h2 id="results-title">Report Predictions</h2>
+
+                <div id="table-wrapper">
+                    <table id="results-table">
+                        <thead>
+                            <tr>
+                                <th>case_id</th>
+                                <th>text_report</th>
+                                <th>drug_mention</th>
+                                <th>reaction_mention</th>
+                                <th>onset</th>
+                                <th>raw_confidence</th>
+                                <th>status</th>
+                                <th>latency_ms</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="empty-state">
+                    <p>No reports analyzed yet. Enter an ADR report above to get started.</p>
+                </div>
+
+                <div id="export-row">
+                    <button id="clear-btn" type="button">Clear All</button>
+                    <button id="export-btn" type="button">Export to CSV</button>
+                </div>
+            </section>
         </section>
 
-        <!-- Results section -->
-        <section id="results-section">
-            <h2 id="results-title">Report Predictions</h2>
+        <section id="analytics-view" class="tab-view" style="display:none;">
+            <section id="analytics-controls">
+                <div id="analytics-filter-row">
+                    <button class="analytics-filter-btn active" data-view="all" type="button">All</button>
+                    <button class="analytics-filter-btn" data-view="accepted" type="button">Accepted</button>
+                    <button class="analytics-filter-btn" data-view="needs_review" type="button">Needs Review</button>
+                </div>
+                <button id="generate-report-btn" type="button">Generate Report</button>
+            </section>
 
-            <div id="table-wrapper">
-                <table id="results-table">
-                    <thead>
-                        <tr>
-                            <th>case_id</th>
-                            <th>text_report</th>
-                            <th>drug_mention</th>
-                            <th>reaction_mention</th>
-                            <th>onset</th>
-                            <th>raw_confidence</th>
-                            <th>status</th>
-                            <th>latency_ms</th>
-                        </tr>
-                    </thead>
-                    <tbody id="results-body">
-                        <!-- Rows injected by JS -->
-                    </tbody>
-                </table>
+            <div id="analytics-empty-state" class="analytics-empty-state" style="display:none;">
+                <p>No analytics data available for this view yet. Analyze reports first to generate visualizations.</p>
             </div>
 
-            <div id="empty-state">
-                <p>No reports analyzed yet. Enter an ADR report above to get started.</p>
-            </div>
+            <section id="analytics-grid" style="display:none;">
+                <article class="analytics-card">
+                    <div class="chart-panel">
+                        <canvas id="medicines-chart"></canvas>
+                    </div>
+                    <div class="analytics-table-panel">
+                        <h3 class="analytics-card-title">Top Medicines</h3>
+                        <div class="analytics-table-wrap">
+                            <table class="analytics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Drug Name</th>
+                                        <th>Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="medicines-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </article>
 
-            <div id="export-row">
-                <button id="clear-btn" type="button">Clear All</button>
-                <button id="export-btn" type="button">Export to CSV</button>
-            </div>
+                <article class="analytics-card">
+                    <div class="chart-panel">
+                        <canvas id="association-chart"></canvas>
+                    </div>
+                    <div class="analytics-table-panel">
+                        <h3 class="analytics-card-title">Top Drug-ADR Association</h3>
+                        <div class="analytics-table-wrap">
+                            <table class="analytics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Drug Name</th>
+                                        <th>Top ADR</th>
+                                        <th>Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="association-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="analytics-card">
+                    <div class="chart-panel">
+                        <canvas id="adrs-chart"></canvas>
+                    </div>
+                    <div class="analytics-table-panel">
+                        <h3 class="analytics-card-title">Top ADR Symptoms</h3>
+                        <div class="analytics-table-wrap">
+                            <table class="analytics-table">
+                                <thead>
+                                    <tr>
+                                        <th>ADR Name</th>
+                                        <th>Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adrs-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </article>
+            </section>
         </section>
 
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/static/app.js"></script>
 </body>
 </html>
