@@ -7,12 +7,14 @@ import io
 import logging
 from typing import Dict, List
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.db import clear_all_reports, get_all_reports
+from app.services.analytics import build_analytics_summary
 from app.services.analyzers.orchestrator import analyze_report
+from app.services.reporting import build_analytics_report_pdf
 
 logger = logging.getLogger("reportrx.api")
 
@@ -33,6 +35,36 @@ class ReportRow(BaseModel):
     raw_confidence: float
     status: str
     latency_ms: float
+
+
+class AnalyticsCountRow(BaseModel):
+    name: str
+    count: int
+
+
+class AssociationRow(BaseModel):
+    drug_name: str
+    top_adr: str
+    count: int
+
+
+class AssociationChartRow(BaseModel):
+    drug_name: str
+    top_adr: str
+    count: int
+
+
+class AnalyticsSummary(BaseModel):
+    view: str
+    view_label: str
+    filtered_report_count: int
+    has_data: bool
+    medicine_chart: List[AnalyticsCountRow]
+    medicine_table: List[AnalyticsCountRow]
+    reaction_chart: List[AnalyticsCountRow]
+    reaction_table: List[AnalyticsCountRow]
+    association_chart: List[AssociationChartRow]
+    association_table: List[AssociationRow]
 
 
 # ── Endpoints ───────────────────────────────────────────────────────────
@@ -91,3 +123,34 @@ async def api_clear_reports():
 async def api_health():
     """Quick liveness check."""
     return {"status": "ok"}
+
+
+@router.get("/api/analytics", response_model=AnalyticsSummary)
+async def api_analytics(view: str = Query("all")):
+    """Return analytics summary derived from persisted reports."""
+    try:
+        return build_analytics_summary(view)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get("/api/analytics/report")
+async def api_analytics_report(view: str = Query("all")):
+    """Generate a formatted PDF report for the selected analytics view."""
+    try:
+        pdf_bytes = build_analytics_report_pdf(view)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception:
+        logger.exception("Analytics report generation error")
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to generate the analytics report right now.",
+        )
+
+    filename = f"reportrx_analytics_{view}.pdf"
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

@@ -84,18 +84,26 @@ def insert_report(report: Dict) -> None:
         )
 
 
-def get_all_reports() -> List[Dict]:
-    """Return all reports in insertion order."""
+def get_reports(status: Optional[str] = None) -> List[Dict]:
+    """Return reports in insertion order, optionally filtered by status."""
     with _connect() as conn:
-        rows = conn.execute(
-            """
+        query = """
             SELECT case_id, text_report, drug_mention, reaction_mention,
                    onset, raw_confidence, status, latency_ms
             FROM reports
-            ORDER BY rowid ASC
-            """
-        ).fetchall()
+        """
+        params: tuple = ()
+        if status is not None:
+            query += " WHERE status = ?"
+            params = (status,)
+        query += " ORDER BY rowid ASC"
+        rows = conn.execute(query, params).fetchall()
     return [dict(r) for r in rows]
+
+
+def get_all_reports() -> List[Dict]:
+    """Return all reports in insertion order."""
+    return get_reports()
 
 
 def get_report_count() -> int:
