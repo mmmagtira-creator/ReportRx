@@ -15,7 +15,6 @@ This `V1` version is the **clean rule-based build** of the prototype. It keeps t
 - PDF analytics report generation
 - SQLite persistence with sequential case IDs
 - Clear-all reset flow that also resets the case counter
-- No `.env`, no API key, and no external inference service
 
 ---
 
@@ -426,15 +425,6 @@ schema.py                               # Span and graph data structures
 calibration.py                          # Thesis calibration utilities
 weak_supervision.py                     # Supporting thesis extraction helpers
 ```
-
----
-
-## Notes for This Rule-Based Build
-
-- `V1` is intentionally local-only.
-- No external API is used in this build.
-- No `.env` file is required for the web app.
-- The current README describes the synced UI/UX and analytics features that were ported into the rule-based version.
 
 ---
 
