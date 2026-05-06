@@ -2,8 +2,6 @@
 
 ReportRx is a thesis-aligned prototype web application for **Adverse Drug Reaction (ADR) report analysis**. It accepts free-text ADR narratives written in English, Filipino, or code-switched Taglish, then converts them into structured report fields using a **purely local rule-based span-graph extraction pipeline**.
 
-This `V1` version is the **clean rule-based build** of the prototype. It keeps the updated `Report` and `Analytics` user experience, but removes external model routing and runs entirely on the local extractor.
-
 ---
 
 ## What This Version Includes
